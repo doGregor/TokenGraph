@@ -153,4 +153,7 @@ cython_debug/
 
 baselines/test_trainer
 graphs
+raw_data
 results.txt
+
+.DS_Store
