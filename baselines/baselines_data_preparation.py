@@ -12,12 +12,12 @@ def load_twitter_corpus():
     return positive_tweets, negative_tweets
 
 
-def samples_to_df(pos_samples, neg_samples):
+def samples_to_df(pos_samples, neg_samples, number_per_class=40):
     pos_samples = [s for s in pos_samples if len(s.strip()) > 0]
     neg_samples = [s for s in neg_samples if len(s.strip()) > 0]
 
-    pos_samples = pos_samples[:150]
-    neg_samples = neg_samples[:150]
+    pos_samples = pos_samples[:number_per_class]
+    neg_samples = neg_samples[:number_per_class]
 
     pos_labels = [1] * len(pos_samples)
     neg_labels = [0] * len(neg_samples)
@@ -35,7 +35,7 @@ def samples_to_df(pos_samples, neg_samples):
 
 def dataset_from_df(df):
     dataset = Dataset.from_pandas(df=df)
-    dataset = dataset.train_test_split(test_size=0.2)
+    dataset = dataset.train_test_split(test_size=0.5)
     dataset_train, dataset_test = dataset['train'], dataset['test']
     return dataset_train, dataset_test
 

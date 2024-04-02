@@ -153,3 +153,4 @@ cython_debug/
 
 baselines/test_trainer
 graphs
+results.txt

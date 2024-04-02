@@ -4,9 +4,9 @@ import torch
 import torch_geometric.transforms as T
 
 
-def generate_graph_from_text(text_sample, label, context_window=3):
-    tokenized_sample = tokenize_text(text_sample)
-    token_vectors = encode_tokens(tokenized_sample)
+def generate_graph_from_text(text_sample, label, tokenizer, llm, context_window=3):
+    tokenized_sample = tokenize_text(text_sample, tokenizer=tokenizer)
+    token_vectors = encode_tokens(tokenized_sample, bert_model=llm)
 
     node_ids = tokenized_sample['input_ids'][0].tolist()[1:-1]
     node_features = token_vectors.last_hidden_state[0, 1:-1, :]
@@ -17,7 +17,6 @@ def generate_graph_from_text(text_sample, label, context_window=3):
             if i_to < len(node_ids):
                 edge_index[0].append(i_from)
                 edge_index[1].append(i_to)
-    # remove duplicates and make undirected
 
     hyperedge_index = [[], []]
     node_ids = torch.LongTensor(node_ids)

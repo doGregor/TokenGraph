@@ -66,16 +66,21 @@ def eval_model(model, test_loader, print_classification_report=False):
             f1_score(np.concatenate(true_y), np.concatenate(pred_y), average='macro'))
 
 
-def train_eval_model(model, train_loader, test_loader, loss_fct, optimizer, num_epochs=1, verbose=1):
+def train_eval_model(model, train_loader, eval_loader, test_loader, loss_fct, optimizer, num_epochs=1, verbose=1):
     model.to(DEVICE)
     for epoch in range(1, num_epochs+1):
         train_model(model=model, train_loader=train_loader, loss_fct=loss_fct, optimizer=optimizer)
         train_acc, train_p, train_r, train_f1 = eval_model(model, train_loader)
         if epoch == num_epochs:
+            eval_acc, eval_p, eval_r, eval_f1 = eval_model(model, eval_loader)
+            if verbose == 1:
+                print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Train F1: {train_f1:.4f},'
+                      f' Eval Acc: {eval_acc:.4f}, Eval F1: {eval_f1:.4f}')
             test_acc, test_p, test_r, test_f1 = eval_model(model, test_loader, print_classification_report=True)
             return test_acc, test_p, test_r, test_f1
         else:
-            test_acc, test_p, test_r, test_f1 = eval_model(model, test_loader)
+            eval_acc, eval_p, eval_r, eval_f1 = eval_model(model, eval_loader)
             if verbose == 1:
                 print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Train F1: {train_f1:.4f},'
-                      f' Test Acc: {test_acc:.4f}, Test F1: {test_f1:.4f}')
+                      f' Eval Acc: {eval_acc:.4f}, Eval F1: {eval_f1:.4f}')
+
