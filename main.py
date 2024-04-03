@@ -12,7 +12,7 @@ from nn import *
 
 
 CONFIG = {
-    'dataset': 'snippets', # one out of ['twitter', 'mr', 'snippets']
+    'dataset': 'tag_my_news', # one out of ['twitter', 'mr', 'snippets', 'tag_my_news']
     'skip_data_generation': False,
     'train_eval_samples_per_class': 20,
     'shuffle_train': True,
@@ -27,7 +27,8 @@ if not CONFIG['skip_data_generation']:
     model_dict = {
         'twitter': 'Twitter/twhin-bert-base',
         'mr': 'google-bert/bert-base-uncased',
-        'snippets': 'google-bert/bert-base-uncased'
+        'snippets': 'google-bert/bert-base-uncased',
+        'tag_my_news': 'google-bert/bert-base-uncased',
     }
     bert_tokenizer = AutoTokenizer.from_pretrained(model_dict[CONFIG['dataset']])
     bert_model = AutoModel.from_pretrained(model_dict[CONFIG['dataset']])
@@ -66,8 +67,15 @@ if not CONFIG['skip_data_generation']:
                     continue
                 graph = generate_graph_from_text(sample, label=cls, tokenizer=bert_tokenizer, llm=bert_model)
                 save_graph(graph, file_name=f'{cls}_{idx}', dataset=CONFIG['dataset'])
+    elif CONFIG['dataset'] == 'tag_my_news':
+        samples = load_tagmynews_corpus()
+        for cls, class_samples in enumerate(samples):
+            for idx, sample in enumerate(tqdm(class_samples)):
+                if str(cls) + '_' + str(idx) + '.pickle' in existing_graphs:
+                    continue
+                graph = generate_graph_from_text(sample, label=cls, tokenizer=bert_tokenizer, llm=bert_model)
+                save_graph(graph, file_name=f'{cls}_{idx}', dataset=CONFIG['dataset'])
 
-sys.exit(0)
 
 # (2) load data
 train_graphs, eval_graph, test_graphs = load_train_eval_test(
@@ -83,7 +91,13 @@ test_loader = DataLoader(test_graphs, batch_size=CONFIG['batch_size'], shuffle=F
 
 
 # (3) prepare model
-model = GAT(hidden_channels=CONFIG['hidden_dim'], out_channels=2, use_hypergraph=False)
+num_classes_dict = {
+    'twitter': 2,
+    'mr': 2,
+    'snippets': 8,
+    'tag_my_news': 7,
+}
+model = GAT(hidden_channels=CONFIG['hidden_dim'], out_channels=num_classes_dict[CONFIG['dataset']], use_hypergraph=False)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.00005)
 criterion = torch.nn.CrossEntropyLoss()

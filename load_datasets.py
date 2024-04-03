@@ -75,10 +75,40 @@ def load_snippets_corpus():
             label_sample_dict['politics-society'], label_sample_dict['sports'])
 
 
+def load_tagmynews_corpus():
+    label_sample_dict = {
+        'health': [],
+        'business': [],
+        'world': [],
+        'us': [],
+        'sport': [],
+        'entertainment': [],
+        'sci_tech': []
+    }
+    all_samples = []
+    all_labels = []
+    with open('raw_data/TagMyNews/tagmynews.txt', 'r') as input_data:
+        data = input_data.readlines()
+    data = [list(filter(None, sublist.split('\n'))) for sublist in ''.join(data).split('\n\n')]
+    for sample in data:
+        if len(sample) != 7:
+            continue
+        all_samples.append(sample[0]) # + '. ' + sample[1])
+        all_labels.append(sample[-1])
+    for idx, sample in enumerate(all_samples):
+        label = all_labels[idx]
+        label_sample_dict[label].append(sample.lower())
+
+    return (label_sample_dict['health'], label_sample_dict['business'], label_sample_dict['world'],
+            label_sample_dict['us'], label_sample_dict['sport'], label_sample_dict['entertainment'],
+            label_sample_dict['sci_tech'])
+
+
 if __name__ == '__main__':
     # positive_tweets, negative_tweets = load_twitter_corpus()
     # positive_samples, negative_samples = load_mr_corpus()
-    samples = load_snippets_corpus()
+    # samples = load_snippets_corpus()
+    samples = load_tagmynews_corpus()
     for s in samples:
         print(len(s), s[0])
     """

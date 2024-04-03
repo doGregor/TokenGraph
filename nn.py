@@ -14,7 +14,6 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class GAT(torch.nn.Module):
     def __init__(self, hidden_channels, out_channels, num_layers=2, num_attention_heads=1, use_hypergraph=False):
         super(GAT, self).__init__()
-        torch.manual_seed(12345)
 
         self.use_hypergraph = use_hypergraph
 
