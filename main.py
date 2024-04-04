@@ -1,5 +1,4 @@
 import sys
-
 from load_datasets import *
 from feature_extraction import *
 from graph_structure import *
@@ -9,16 +8,21 @@ from tqdm import tqdm
 from random import shuffle
 from torch_geometric.data import DataLoader
 from nn import *
+import warnings
+warnings.filterwarnings("ignore")
 
 
 CONFIG = {
-    'dataset': 'tag_my_news', # one out of ['twitter', 'mr', 'snippets', 'tag_my_news']
-    'skip_data_generation': False,
+    'dataset': 'mr', # one out of ['twitter', 'mr', 'snippets', 'tag_my_news']
+    'skip_data_generation': True,
     'train_eval_samples_per_class': 20,
     'shuffle_train': True,
     'batch_size': 8,
     'hidden_dim': 128,
-    'eval_best': True
+    'epochs': 200,
+    'eval_best': True,
+    'num_runs': 5,
+    'verbose': 0,
 }
 
 
@@ -77,32 +81,45 @@ if not CONFIG['skip_data_generation']:
                 save_graph(graph, file_name=f'{cls}_{idx}', dataset=CONFIG['dataset'])
 
 
-# (2) load data
-train_graphs, eval_graph, test_graphs = load_train_eval_test(
-    dataset=CONFIG['dataset'],
-    num_per_class_train=CONFIG['train_eval_samples_per_class'],
-    num_per_class_eval=CONFIG['train_eval_samples_per_class']
-)
-print(len(train_graphs), len(eval_graph), len(test_graphs))
+acc_runs = []
+precision_runs = []
+recall_runs = []
+f1_runs = []
+for i in range(CONFIG['num_runs']):
+    # (2) load data
+    train_graphs, eval_graph, test_graphs = load_train_eval_test(
+        dataset=CONFIG['dataset'],
+        num_per_class_train=CONFIG['train_eval_samples_per_class'],
+        num_per_class_eval=CONFIG['train_eval_samples_per_class']
+    )
+    print(len(train_graphs), len(eval_graph), len(test_graphs))
 
-train_loader = DataLoader(train_graphs, batch_size=CONFIG['batch_size'], shuffle=CONFIG['shuffle_train'])
-eval_loader = DataLoader(eval_graph, batch_size=CONFIG['batch_size'], shuffle=False)
-test_loader = DataLoader(test_graphs, batch_size=CONFIG['batch_size'], shuffle=False)
+    train_loader = DataLoader(train_graphs, batch_size=CONFIG['batch_size'], shuffle=CONFIG['shuffle_train'])
+    eval_loader = DataLoader(eval_graph, batch_size=CONFIG['batch_size'], shuffle=False)
+    test_loader = DataLoader(test_graphs, batch_size=CONFIG['batch_size'], shuffle=False)
 
+    # (3) prepare model
+    num_classes_dict = {
+        'twitter': 2,
+        'mr': 2,
+        'snippets': 8,
+        'tag_my_news': 7,
+    }
+    model = GAT(hidden_channels=CONFIG['hidden_dim'], out_channels=num_classes_dict[CONFIG['dataset']], use_hypergraph=False)
 
-# (3) prepare model
-num_classes_dict = {
-    'twitter': 2,
-    'mr': 2,
-    'snippets': 8,
-    'tag_my_news': 7,
-}
-model = GAT(hidden_channels=CONFIG['hidden_dim'], out_channels=num_classes_dict[CONFIG['dataset']], use_hypergraph=False)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.00005)
+    criterion = torch.nn.CrossEntropyLoss()
 
-optimizer = torch.optim.Adam(model.parameters(), lr=0.00005)
-criterion = torch.nn.CrossEntropyLoss()
+    acc, precision, recall, f1 = train_eval_model(model=model, train_loader=train_loader, eval_loader=eval_loader,
+                                                  test_loader=test_loader, loss_fct=criterion, optimizer=optimizer,
+                                                  num_epochs=CONFIG['epochs'], verbose=CONFIG['verbose'],
+                                                  eval_best=CONFIG['eval_best'])
+    acc_runs.append(acc)
+    precision_runs.append(precision)
+    recall_runs.append(recall)
+    f1_runs.append(f1)
 
-acc, precision, recall, f1 = train_eval_model(model=model, train_loader=train_loader, eval_loader=eval_loader,
-                                              test_loader=test_loader, loss_fct=criterion, optimizer=optimizer,
-                                              num_epochs=200, verbose=1, eval_best=CONFIG['eval_best'])
-
+print('Accuracy:', acc_runs, sum(acc_runs)/CONFIG['num_runs'])
+print('Precision:', precision_runs, sum(precision_runs)/CONFIG['num_runs'])
+print('Recall:', recall_runs, sum(recall_runs)/CONFIG['num_runs'])
+print('F1:', f1_runs, sum(f1_runs)/CONFIG['num_runs'])
