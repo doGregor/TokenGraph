@@ -152,6 +152,7 @@ cython_debug/
 .idea/
 
 baselines/test_trainer
+baselines/models
 graphs
 raw_data
 results.txt
