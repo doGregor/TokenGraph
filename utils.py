@@ -39,7 +39,7 @@ def change_n_hop_neighborhood(graph, n_hops):
 
 
 def load_train_eval_test(dataset, num_per_class_train=20, num_per_class_eval=20, n_hop_neighborhood=2,
-                         random_samples=True):
+                         random_samples=True, random_seed=100):
     if dataset == 'twitter':
         pos_samples = []
         neg_samples = []
@@ -55,8 +55,8 @@ def load_train_eval_test(dataset, num_per_class_train=20, num_per_class_eval=20,
             shuffle(pos_samples)
             shuffle(neg_samples)
         else:
-            random.Random(42).shuffle(pos_samples)
-            random.Random(42).shuffle(neg_samples)
+            random.Random(random_seed).shuffle(pos_samples)
+            random.Random(random_seed).shuffle(neg_samples)
         train_graphs = pos_samples[:num_per_class_train] + neg_samples[:num_per_class_train]
         eval_graphs = (pos_samples[num_per_class_train:num_per_class_train+num_per_class_eval] +
                        neg_samples[num_per_class_train:num_per_class_train+num_per_class_eval])
@@ -77,8 +77,8 @@ def load_train_eval_test(dataset, num_per_class_train=20, num_per_class_eval=20,
             shuffle(pos_samples)
             shuffle(neg_samples)
         else:
-            random.Random(42).shuffle(pos_samples)
-            random.Random(42).shuffle(neg_samples)
+            random.Random(random_seed).shuffle(pos_samples)
+            random.Random(random_seed).shuffle(neg_samples)
         train_graphs = pos_samples[:num_per_class_train] + neg_samples[:num_per_class_train]
         eval_graphs = (pos_samples[num_per_class_train:num_per_class_train + num_per_class_eval] +
                        neg_samples[num_per_class_train:num_per_class_train + num_per_class_eval])
@@ -107,7 +107,7 @@ def load_train_eval_test(dataset, num_per_class_train=20, num_per_class_eval=20,
             if random_samples:
                 shuffle(sample_dict[label])
             else:
-                random.Random(42).shuffle(sample_dict[label])
+                random.Random(random_seed).shuffle(sample_dict[label])
             train_graphs += sample_dict[label][:num_per_class_train]
             eval_graphs += sample_dict[label][num_per_class_train:num_per_class_train + num_per_class_eval]
             test_graphs += sample_dict[label][num_per_class_train + num_per_class_eval:]
@@ -133,7 +133,7 @@ def load_train_eval_test(dataset, num_per_class_train=20, num_per_class_eval=20,
             if random_samples:
                 shuffle(sample_dict[label])
             else:
-                random.Random(42).shuffle(sample_dict[label])
+                random.Random(random_seed).shuffle(sample_dict[label])
             train_graphs += sample_dict[label][:num_per_class_train]
             eval_graphs += sample_dict[label][num_per_class_train:num_per_class_train + num_per_class_eval]
             test_graphs += sample_dict[label][num_per_class_train + num_per_class_eval:]
@@ -148,9 +148,9 @@ def load_train_eval_test(dataset, num_per_class_train=20, num_per_class_eval=20,
         shuffle(eval_graphs)
         shuffle(test_graphs)
     else:
-        random.Random(42).shuffle(train_graphs)
-        random.Random(42).shuffle(eval_graphs)
-        random.Random(42).shuffle(test_graphs)
+        random.Random(random_seed).shuffle(train_graphs)
+        random.Random(random_seed).shuffle(eval_graphs)
+        random.Random(random_seed).shuffle(test_graphs)
     return train_graphs, eval_graphs, test_graphs
 
 

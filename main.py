@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 
 
 CONFIG = {
-    'dataset': 'twitter', # one out of ['twitter', 'mr', 'snippets', 'tag_my_news']
+    'dataset': 'tag_my_news', # one out of ['twitter', 'mr', 'snippets', 'tag_my_news']
     'skip_data_generation': True,
     'train_eval_samples_per_class': 20,
     'shuffle_train': True,
@@ -24,6 +24,7 @@ CONFIG = {
     'num_runs': 5,
     'verbose': 0,
     'random_samples': False, # False = use same training samples, True = shuffle data and select random training samples
+    'random_seed': 100, # this will only be used if 'random_samples'=False
     'num_attention_heads': 1,
     'n_hop_neighborhood': 2, # this has to be set n_hops + 1, e.g. for 2-hop graph = 3
     'gnn_type': 'GAT' # GAT or SAGE or GCN
@@ -95,7 +96,9 @@ for i in range(CONFIG['num_runs']):
         dataset=CONFIG['dataset'],
         num_per_class_train=CONFIG['train_eval_samples_per_class'],
         num_per_class_eval=CONFIG['train_eval_samples_per_class'],
-        n_hop_neighborhood=CONFIG['n_hop_neighborhood']
+        n_hop_neighborhood=CONFIG['n_hop_neighborhood'],
+        random_samples=CONFIG['random_samples'],
+        random_seed=CONFIG['random_seed']
     )
     print(len(train_graphs), len(eval_graph), len(test_graphs))
 
