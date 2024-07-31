@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 
 
 CONFIG = {
-    'dataset': 'mr', # one out of ['twitter', 'mr', 'snippets', 'tag_my_news']
+    'dataset': 'twitter', # one out of ['twitter', 'mr', 'snippets', 'tag_my_news']
     'skip_data_generation': True,
     'train_eval_samples_per_class': 20,
     'shuffle_train': True,
@@ -23,6 +23,10 @@ CONFIG = {
     'eval_best': True,
     'num_runs': 5,
     'verbose': 0,
+    'random_samples': False, # False = use same training samples, True = shuffle data and select random training samples
+    'num_attention_heads': 1,
+    'n_hop_neighborhood': 2, # this has to be set n_hops + 1, e.g. for 2-hop graph = 3
+    'gnn_type': 'GAT' # GAT or SAGE or GCN
 }
 
 
@@ -90,7 +94,8 @@ for i in range(CONFIG['num_runs']):
     train_graphs, eval_graph, test_graphs = load_train_eval_test(
         dataset=CONFIG['dataset'],
         num_per_class_train=CONFIG['train_eval_samples_per_class'],
-        num_per_class_eval=CONFIG['train_eval_samples_per_class']
+        num_per_class_eval=CONFIG['train_eval_samples_per_class'],
+        n_hop_neighborhood=CONFIG['n_hop_neighborhood']
     )
     print(len(train_graphs), len(eval_graph), len(test_graphs))
 
@@ -105,7 +110,15 @@ for i in range(CONFIG['num_runs']):
         'snippets': 8,
         'tag_my_news': 7,
     }
-    model = GAT(hidden_channels=CONFIG['hidden_dim'], out_channels=num_classes_dict[CONFIG['dataset']], use_hypergraph=False)
+    if CONFIG['gnn_type'] == 'GAT':
+        model = GAT(hidden_channels=CONFIG['hidden_dim'], out_channels=num_classes_dict[CONFIG['dataset']],
+                    num_attention_heads=CONFIG['num_attention_heads'], use_hypergraph=False)
+    elif CONFIG['gnn_type'] == 'GCN':
+        model = GCN(hidden_channels=CONFIG['hidden_dim'], out_channels=num_classes_dict[CONFIG['dataset']])
+    elif CONFIG['gnn_type'] == 'SAGE':
+        model = SAGE(hidden_channels=CONFIG['hidden_dim'], out_channels=num_classes_dict[CONFIG['dataset']])
+    else:
+        raise 'no valid GNN selected, must be one out of [GAT, GCN, SAGE]'
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.00005)
     criterion = torch.nn.CrossEntropyLoss()
