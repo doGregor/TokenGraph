@@ -1,7 +1,7 @@
 from torch_geometric.loader import DataLoader
 import torch
 import torch.nn.functional as F
-from torch_geometric.nn import GATConv, Linear, HypergraphConv
+from torch_geometric.nn import GATConv, GraphSAGE, HypergraphConv, GCNConv
 from torch_geometric.nn import global_mean_pool
 import numpy as np
 import torch
@@ -33,6 +33,52 @@ class GAT(torch.nn.Module):
             x = conv(graph.x, graph.edge_index).relu()
             if self.use_hypergraph:
                 x = self.hypergraph_conv(x, graph.hyperedge_index)
+
+        x = global_mean_pool(x, graph.batch)
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.lin(x)
+
+        return x
+
+
+class GCN(torch.nn.Module):
+    def __init__(self, hidden_channels, out_channels, num_layers=2):
+        super(GCN, self).__init__()
+        torch.manual_seed(12345)
+
+        self.convs = torch.nn.ModuleList()
+        for _ in range(num_layers):
+            conv = GCNConv(-1, hidden_channels)
+            self.convs.append(conv)
+
+        self.lin = torch.nn.Linear(hidden_channels, out_channels)
+
+    def forward(self, graph):
+        for conv in self.convs:
+            x = conv(graph.x, graph.edge_index).relu()
+
+        x = global_mean_pool(x, graph.batch)
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.lin(x)
+
+        return x
+
+
+class SAGE(torch.nn.Module):
+    def __init__(self, hidden_channels, out_channels, num_layers=2):
+        super(SAGE, self).__init__()
+        torch.manual_seed(12345)
+
+        self.convs = torch.nn.ModuleList()
+        for _ in range(num_layers):
+            conv = GraphSAGE(in_channels=-1, hidden_channels=hidden_channels, num_layers=num_layers)
+            self.convs.append(conv)
+
+        self.lin = torch.nn.Linear(hidden_channels, out_channels)
+
+    def forward(self, graph):
+        for conv in self.convs:
+            x = conv(graph.x, graph.edge_index).relu()
 
         x = global_mean_pool(x, graph.batch)
         x = F.dropout(x, p=0.5, training=self.training)
