@@ -4,7 +4,7 @@ If you use our approach please cite our work as follows:
 ```
 @inproceedings{donabauer2025token,
 author = {Donabauer, Gregor and Kruschwitz, Udo},
-title = {Token-Level Graphs for&nbsp;Short Text Classification},
+title = {Token-Level Graphs for Short Text Classification},
 year = {2025},
 isbn = {978-3-031-88713-0},
 publisher = {Springer-Verlag},
