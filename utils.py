@@ -5,6 +5,7 @@ import random
 from random import shuffle
 import torch_geometric.transforms as T
 import torch
+from torch_geometric.data import Data
 
 
 def save_graph(graph, file_name, dataset):
@@ -32,10 +33,16 @@ def change_n_hop_neighborhood(graph, n_hops):
             if i_to < number_of_nodes:
                 edge_index[0].append(i_from)
                 edge_index[1].append(i_to)
-    graph.edge_index = torch.LongTensor(edge_index)
-    graph = T.RemoveDuplicatedEdges()(graph)
-    graph = T.ToUndirected()(graph)
-    return graph
+
+    new_edge_index = torch.LongTensor(edge_index)
+    new_graph = Data(
+        x=graph.x,
+        edge_index=new_edge_index,
+        y=graph.y
+    )
+    new_graph = T.RemoveDuplicatedEdges()(new_graph)
+    new_graph = T.ToUndirected()(new_graph)
+    return new_graph
 
 
 def load_train_eval_test(dataset, num_per_class_train=20, num_per_class_eval=20, n_hop_neighborhood=2,
