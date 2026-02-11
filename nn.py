@@ -141,6 +141,7 @@ def train_eval_model(model, train_loader, eval_loader, test_loader, loss_fct, op
         else:
             eval_acc, eval_p, eval_r, eval_f1 = eval_model(model, eval_loader)
             if eval_f1 > best_f1:
+                best_f1 = eval_f1
                 model_to_evaluate = model
             if verbose == 1:
                 print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Train F1: {train_f1:.4f},'
