@@ -1,3 +1,4 @@
+import os
 from torch_geometric.loader import DataLoader
 import torch
 import torch.nn.functional as F
@@ -123,7 +124,7 @@ def train_eval_model(model, train_loader, eval_loader, test_loader, loss_fct, op
                      eval_best=False):
     model.to(DEVICE)
     best_f1 = 0
-    model_to_evaluate = None
+    save_path = "best_weights.pth"
     for epoch in range(1, num_epochs+1):
         train_model(model=model, train_loader=train_loader, loss_fct=loss_fct, optimizer=optimizer)
         train_acc, train_p, train_r, train_f1 = eval_model(model, train_loader)
@@ -133,16 +134,17 @@ def train_eval_model(model, train_loader, eval_loader, test_loader, loss_fct, op
                 print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Train F1: {train_f1:.4f},'
                       f' Eval Acc: {eval_acc:.4f}, Eval F1: {eval_f1:.4f}')
             if eval_best:
-                test_acc, test_p, test_r, test_f1 = eval_model(model, test_loader, print_classification_report=True)
-            else:
-                test_acc, test_p, test_r, test_f1 = eval_model(model_to_evaluate, test_loader,
-                                                               print_classification_report=True)
+                model.load_state_dict(torch.load(save_path))
+            test_acc, test_p, test_r, test_f1 = eval_model(model, test_loader, print_classification_report=True)
+            if os.path.exists(save_path):
+                os.remove(save_path)
+                
             return test_acc, test_p, test_r, test_f1
         else:
             eval_acc, eval_p, eval_r, eval_f1 = eval_model(model, eval_loader)
             if eval_f1 > best_f1:
                 best_f1 = eval_f1
-                model_to_evaluate = model
+                torch.save(model.state_dict(), save_path)
             if verbose == 1:
                 print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Train F1: {train_f1:.4f},'
                       f' Eval Acc: {eval_acc:.4f}, Eval F1: {eval_f1:.4f}')
